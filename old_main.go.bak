@@ -1,0 +1,64 @@
+package main_old
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"strings"
+)
+
+func main() {
+
+	fmt.Println("Starting up a server..")
+	http.HandleFunc("/", uploadHandler)
+	http.ListenAndServe(":1337", nil)
+	fmt.Println("Server is now ready! Please visit this IP address on port 1337 to start")
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	if len(r.URL.Path[1:]) == 0 {
+		fmt.Println("No path specified. Defaulting to index.html")
+		http.ServeFile(w, r, "html/index.html")
+	} else if len(r.Form["deburl"]) > 0 {
+		if strings.Contains(r.Form["deburl"][0], ".deb") == true {
+			fmt.Println("Path is a Debian URL!")
+			fmt.Println(r.Form["deburl"][0])
+			installDEB(w, r.Form["deburl"][0])
+		} else {
+			fmt.Println("Not a .deb. Showing error")
+			fmt.Fprintf(w, "<h1>Not a valid DEB file!</h1>")
+		}
+
+	} else {
+		http.ServeFile(w, r, "html/"+r.URL.Path[1:])
+	}
+
+}
+
+func installDEB(w http.ResponseWriter, deb string) {
+	out, err := os.Create("/tmp/installer.deb")
+	defer out.Close()
+	if err != nil {
+		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to write "+deb+" to /tmp/. Error was:")
+		fmt.Println(err)
+	}
+	resp, err := http.Get(deb)
+	if err != nil {
+		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to Get "+deb+". Error was:")
+		fmt.Println(err)
+	}
+
+	defer resp.Body.Close()
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to output "+deb+" to '/tmp/installer.deb'. Error was:")
+		fmt.Println(err)
+	}
+	cmd := exec.Command("dpkg", "-i /tmp/installer.deb")
+	cmd.Run()
+
+}

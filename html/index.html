@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Upload driver to Sphere</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <form method="post" action="/index.html">
+            <h1>Ninja Sphere driver installation</h1>
+            <p>This page will help you install or update Ninja Sphere drivers and apps without requiring you to SSH into your device. Please read the instructions carefully, as failure to do so could void the warranty on your Sphere or cause damage</p>
+            <p>Drivers need to be in the form of a <em>deb</em> file built by the <a href="https://discuss.ninjablocks.com/t/beta-preview-ninja-sphere-cli-for-building-packaging-apps-drivers/3400">Ninja Sphere CLI</a>. If you don't know what this means, please ask the creator of the driver</p>
+            <div class="form-group">
+              <label for="binurl">Driver URL</label>
+              <input type="text" placeholder="e.g. http://github.com/Grayda/sphere-orvibo/releases/v0.0.1/sphere-orvibo.deb" id="deburl" name="deburl" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="submit" value="Start Installation" class="btn btn-primary form-control">
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <p>This app is not written, endorsed or supported by Ninja Blocks Pty. Ltd. Please contact <a href="http://davidgray.photography">the author</a> for assistance</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </body>
+</html>
