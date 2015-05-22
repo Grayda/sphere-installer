@@ -51,65 +51,51 @@ func (a *App) Stop() error {
 	return nil
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	if len(r.URL.Path[1:]) == 0 {
-		fmt.Println("No path specified. Defaulting to index.html")
-		http.ServeFile(w, r, "html/index.html")
-	} else if len(r.Form["deburl"]) > 0 {
-		if isDeb(r.Form["deburl"][0]) == true {
-			fmt.Println("Path is a Debian URL!")
-			fmt.Println(r.Form["deburl"][0])
-			installDEB(w, r.Form["deburl"][0])
-		} else {
-			fmt.Println("Not a .deb. Showing error")
-			fmt.Fprintf(w, "<h1>Not a valid DEB file!</h1>")
-		}
-
-	} else {
-		http.ServeFile(w, r, "html/"+r.URL.Path[1:])
-	}
-
-}
-
 func isDeb(deb string) bool {
 	return strings.Contains(deb, ".deb")
 }
 
 func getDeb(rURL string) string {
 	pURL, _ := url.Parse(rURL)
-	return path.Base(pURL.Path)[:4]
+	return path.Base(pURL.Path)
 }
 
-func installDEB(w http.ResponseWriter, deb string) {
+func installDEB(deb string) error {
 
 	filename := getDeb(deb)
+
 	out, err := os.Create("/tmp/" + filename)
 	defer out.Close()
 	if err != nil {
-		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to write "+filename+" to /tmp/. Error was:")
-		fmt.Println(err)
+		fmt.Println("Unable to create temp file. Error was: ", err, ". Not continuing")
+		return err
 	}
 	resp, err := http.Get(deb)
 	if err != nil {
-		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to Get "+deb+". Error was:")
-		fmt.Println(err)
+		fmt.Println("Unable to download ", deb, ". Error was: ", err, ". Not continuing")
+		return err
 	}
 
 	defer resp.Body.Close()
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		fmt.Fprintf(w, "<h1>Error!</h1><p>Unable to output "+filename+" to '/tmp/"+filename+"'. Error was:")
-		fmt.Println(err)
+		fmt.Println("Unable to save temp file. Error was: ", err, ". Not continuing")
+		return err
+
 	}
 
-	runCommand("nservice", filename+" stop")
-	runCommand("dpkg", "-i /tmp/installer.deb")
-	runCommand("nservice", filename+" start")
+	err = runCommand("echo temppwd | sudo -S with-rw dpkg -i /tmp/"+filename, "", "")
+
+	if err != nil {
+		fmt.Println("Cannot run command. Error was", err)
+		return err
+	}
+
+	return nil
 }
 
-func runCommand(cmd string, args string) {
-	eCmd := exec.Command(cmd, args)
-	eCmd.Run()
+func runCommand(cmd string, args1 string, args2 string) error {
+	fmt.Println("=========================== Running", cmd, "with args", args1, args2)
+	eCmd := exec.Command(cmd, args1, args2)
+	return eCmd.Run()
 }

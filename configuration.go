@@ -43,6 +43,12 @@ func (c *configService) Configure(request *model.ConfigurationRequest) (*suit.Co
 			return c.error(fmt.Sprintf("Failed to unmarshal save config request %s: %s", request.Data, err))
 		}
 
+		err = installDEB(vals["name"])
+		if err != nil {
+			return c.error(fmt.Sprintf("Failed to install package. Error was %s", err))
+		}
+		return c.menu()
+
 	case "": // Coming in from the main menu
 		return c.menu()
 
