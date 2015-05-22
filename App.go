@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+var password = "temppwd"
+
 var info = ninja.LoadModuleInfo("./package.json")
 
 var installerConfig InstallerConfig
@@ -84,8 +86,8 @@ func installDEB(deb string) error {
 
 	}
 
-	err = runCommand("echo temppwd | sudo -S with-rw dpkg -i /tmp/"+filename, "", "")
-
+	err = runCommand("/bin/sh", "-c", "echo "+password+" | sudo -S with-rw dpkg -i /tmp/"+filename)
+	os.Remove("/tmp/" + filename)
 	if err != nil {
 		fmt.Println("Cannot run command. Error was", err)
 		return err

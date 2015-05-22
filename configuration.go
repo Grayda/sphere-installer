@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/ninjasphere/go-ninja/model"
 	"github.com/ninjasphere/go-ninja/suit"
 )
@@ -46,9 +45,13 @@ func (c *configService) Configure(request *model.ConfigurationRequest) (*suit.Co
 		err = installDEB(vals["name"])
 		if err != nil {
 			return c.error(fmt.Sprintf("Failed to install package. Error was %s", err))
+		} else {
+			return c.confirm("Success!", "The driver has installed successfully")
 		}
 		return c.menu()
 
+	case "menu":
+		return c.menu()
 	case "": // Coming in from the main menu
 		return c.menu()
 
@@ -82,7 +85,7 @@ func (c *configService) confirm(title string, description string) (*suit.Configu
 		Actions: []suit.Typed{ // This configuration screen can show actionable buttons at the bottom. ReplyAction, as shown above, calls Configure. There is also CloseAction for cancel buttons
 			suit.ReplyAction{
 				Label:        "Okay",
-				Name:         "list",
+				Name:         "menu",
 				DisplayClass: "success", // These are bootstrap classes (or rather, font-awesome classes). They are basically btn-*, where * is DisplayClass (e.g. btn-success)
 				DisplayIcon:  "ok",      // Same as above. If you want to show fa-open-folder, you'd set DisplayIcon to "open-folder"
 			},
@@ -110,7 +113,7 @@ func (c *configService) error(message string) (*suit.ConfigurationScreen, error)
 		Actions: []suit.Typed{
 			suit.ReplyAction{ // Shows a button we can click on. Takes us back to c.Configuration (reply.Action will be "list")
 				Label:        "Cancel",
-				Name:         "list",
+				Name:         "menu",
 				DisplayClass: "success",
 				DisplayIcon:  "ok",
 			},
